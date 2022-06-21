@@ -1,0 +1,16 @@
+{
+  "name": "gh-projects-tool",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run test",
+    "add-issues": "node addIssues.js"
+  },
+  "author": "@javabster",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "dotenv": "^16.0.1"
+  }
+}
