@@ -61,7 +61,7 @@ async function githubGraphqlPost(query) {
     {
       headers: {
         'Content-Type': 'application/json',
-        Authorization: 'token ' + process.env.GITHUB_TOKEN,
+        Authorization: 'token ' + process.env.GH_TOKEN,
       },
     }).then(res => console.log(res.data))
     .catch((error) => {
