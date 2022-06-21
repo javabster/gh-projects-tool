@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: npm install
       
-      - name: Add issues
+      - name: Add issues from Qiskit Terra
         env: 
           PROJECT_ID: ${{ secrets.PROJECT_ID }}
           REPO: qiskit/qiskit-terra
