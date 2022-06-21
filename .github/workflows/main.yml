@@ -1,6 +1,6 @@
 # This workflow runs the addIssues script nightly
 
-name: Add Qiskit Terra issues to GitHub Project nightly
+name: Nightly Project Update
 
 # Run workflow nightly at 2am UTC
 on:
