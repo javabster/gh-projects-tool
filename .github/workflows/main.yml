@@ -34,4 +34,5 @@ jobs:
           PROJECT_ID: ${{ secrets.PROJECT_ID }}
           REPO: qiskit/qiskit-terra
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          FIELD_ID_LAST_UPDATE: ${{ secrets.FIELD_ID_LAST_UPDATE }}
         run: npm run add-issues
