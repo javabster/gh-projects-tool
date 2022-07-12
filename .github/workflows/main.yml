@@ -35,4 +35,6 @@ jobs:
           REPO: qiskit/qiskit-terra
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           FIELD_ID_LAST_UPDATE: ${{ secrets.FIELD_ID_LAST_UPDATE }}
+          LABELS: ["good first issue", "help wanted", "Community PR"]
+          UPDATE_FIELD_BOOLS: [false, false, true]
         run: npm run add-issues
