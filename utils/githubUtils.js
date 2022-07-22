@@ -1,5 +1,5 @@
 const axios = require('axios')
-const { getDaysBetween } = require('./dateUtils')
+const { getDaysBetween, delay } = require('./dateUtils')
 
 /**
  * This function fetches open issues with a specific label from a given repo and adds them to a given GitHub project (beta)
@@ -14,7 +14,12 @@ const { getDaysBetween } = require('./dateUtils')
         // construct label query string
         const queryLabel = label.replace(/ /g,"%20")
         // get node ids for all good first issues
-        const res = await axios.get(`https://api.github.com/search/issues?q=label:%22${queryLabel}%22repo:${repo}%20state:open&per_page=100`)
+        const res = await axios.get(`https://api.github.com/search/issues?q=label:%22${queryLabel}%22repo:${repo}%20state:open&per_page=100`, {
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: 'token ' + process.env.GH_TOKEN,
+              }
+          })
         // add issues to project, retrieve project id and issue number
         const addedIssues = await addIssuesToProject(projectId, res.data.items)
 
@@ -37,22 +42,60 @@ const { getDaysBetween } = require('./dateUtils')
   async function updateActivityFields(projectId, issues, addedIssues) {
     try {
         for (issue of issues) {
-            // Do some date maths to get days since last updated
-            const today = new Date()
-            const last_update = issue.updated_at
-            const days_last_update = getDaysBetween(last_update, today)
-
+            delay(3000)
             // Find the issue data from list of issues just added to the project
             const projectItem = addedIssues.filter(obj => {
                 return obj.issueNum === issue.number
               })
 
+              delay(2000)
             // Update the project field 
             if (projectItem.length === 1) {
-                await updateProjectNumberField(projectId, projectItem[0].graphqlId, process.env.FIELD_ID_LAST_UPDATE, days_last_update)
-                .then(res => console.log(`last update field updated for issue ${issue.number}`))
+                // get today's date
+                const today = new Date()
+
+                // get timeline info
+                const timeline = await axios.get(issue.timeline_url, {
+                    headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: 'token ' + process.env.GH_TOKEN,
+                  }})
+
+                // get last comment OR review data
+                const last_comment_or_review = await timeline.data.reverse().find(item => {
+                    return item.event === ("commented" || "reviewed")
+                    }
+                )
+                delay(2000);
+                // console.log(last_comment_or_review)
+                if (last_comment_or_review !== undefined) {
+                    // Do some date maths to get days since last comment/review
+                    const days_last_comment_or_review = await getDaysBetween(last_comment_or_review.created_at, today)
+
+                    // update project 'days since last comment/review' field
+                    await updateProjectNumberField(projectId, projectItem[0].graphqlId, process.env.FIELD_ID_DAYS_LAST_COMMENT_OR_REVIEW, days_last_comment_or_review)
+                    .then(res => console.log(`days since comment/review field updated for issue ${issue.number}`))
+                    
+                }
+                delay(2000)
+               
+                // get last op commit info
+                const last_op_commit = await timeline.data.reverse().find(item => {
+                    const opName = timeline.data[0].event === 'committed' ? timeline.data[0].committer.name : timeline.data[0].actor.login
+                    // NOTE! If OpName is a login username and NOT a name then following will only return false, bc login info is not available on the github commit data object
+                    // for some reason the first event in the events url is sometimes as review request and not a commit so we can't match the OP commit name with the latest commit from OP
+                    return (item.event === "committed") && (item.committer.name === opName)
+                })
+
+                delay(2000)
+                if (last_op_commit !== undefined) {
+                    // Do some date maths to get days since last op commit
+                    const days_last_op_commit = await getDaysBetween(last_op_commit.committer.date, today)
+                    // update project 'days since last op commit' field
+                    await updateProjectNumberField(projectId, projectItem[0].graphqlId, process.env.FIELD_ID_DAYS_LAST_OP_COMMIT, days_last_op_commit)
+                        .then(res => console.log(`days since op commit field updated for issue ${issue.number}`))
+                }
             }
-            
         }
     } catch(err) {
         console.log(err)
@@ -93,6 +136,42 @@ async function updateProjectNumberField(projectId, itemId, fieldId, value) {
         console.log(err)
     }
  }
+
+  /**
+ * This function updates a specified number field on a specified GitHub Project (Beta)
+ * @param {*} projectId node id of GitHub project that have recently been added
+ * @param {*} itemId graphql id of the issue previously added to project
+ * @param {*} fieldId graphql id of the field in the GitHub project that will be updated
+ * @param {*} value the number value that the field will be updated with
+ */
+   async function updateProjectDateField(projectId, itemId, fieldId, value) {
+    try {
+        // construct graphql query
+        query = `
+        mutation {
+            updateProjectV2ItemFieldValue(
+                input: {
+                projectId: "${projectId}"
+                itemId: "${itemId}"
+                fieldId: "${fieldId}"
+                value: { 
+                    date: "${value}"     
+                }
+                }
+            ) {
+                projectV2Item {
+                id
+                }
+            }
+        }`
+
+        // make post request
+        await githubGraphqlPost(query)
+    } catch (err) {
+        console.log(err)
+    }
+ }
+
 
  /**
  * This function adds issues to a specified GitHub project (beta)

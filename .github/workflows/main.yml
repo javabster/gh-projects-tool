@@ -32,9 +32,10 @@ jobs:
       - name: Add issues from Qiskit Terra
         env: 
           PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          FIELD_ID_DAYS_LAST_COMMENT_OR_REVIEW: ${{ secrets.FIELD_ID_DAYS_LAST_COMMENT_OR_REVIEW }}
+          FIELD_ID_DAYS_LAST_OP_COMMIT: ${{ secrets.FIELD_ID_DAYS_LAST_OP_COMMIT }}
           REPO: qiskit/qiskit-terra
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          FIELD_ID_LAST_UPDATE: ${{ secrets.FIELD_ID_LAST_UPDATE }}
           LABELS: ["good first issue", "help wanted", "Community PR"]
           UPDATE_FIELD_BOOLS: [false, false, true]
         run: npm run add-issues
