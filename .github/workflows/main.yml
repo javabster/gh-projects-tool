@@ -36,6 +36,6 @@ jobs:
           FIELD_ID_DAYS_LAST_OP_COMMIT: ${{ secrets.FIELD_ID_DAYS_LAST_OP_COMMIT }}
           REPO: qiskit/qiskit-terra
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          LABELS: ["good first issue", "help wanted", "Community PR"]
-          UPDATE_FIELD_BOOLS: [false, false, true]
+          LABELS: '["good first issue", "help wanted", "Community PR"]'
+          UPDATE_FIELD_BOOLS: '[false, false, true]'
         run: npm run add-issues
